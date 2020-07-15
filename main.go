@@ -143,6 +143,31 @@ func addBullet(c *cli.Context, mark string) error {
 	return nil
 }
 
+func listNotes(c *cli.Context) error {
+	mark := "* "
+
+	path := getLogPath()
+	file, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			break
+		}
+
+		if strings.HasPrefix(line, mark) {
+			println(strings.TrimSuffix(line, "\n"))
+		}
+	}
+	return nil
+}
+
 func main() {
 	app := &cli.App{
 		Name:  "blt",
@@ -159,6 +184,12 @@ func main() {
 				Aliases: []string{"t"},
 				Usage:   "Add a task",
 				Action:  addTask,
+			},
+			{
+				Name:    "notes",
+				Aliases: []string{"ls"},
+				Usage:   "List notes",
+				Action:  listNotes,
 			},
 		},
 	}
