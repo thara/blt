@@ -56,7 +56,14 @@ func getDateFromHeader(line string) (*time.Time, error) {
 }
 
 func addNote(c *cli.Context) error {
-	mark := "*"
+	return addBullet(c, "*")
+}
+
+func addTask(c *cli.Context) error {
+	return addBullet(c, "-")
+}
+
+func addBullet(c *cli.Context, mark string) error {
 	note := c.Args().First()
 
 	entry := fmt.Sprintf("%s %s", mark, note)
@@ -146,6 +153,12 @@ func main() {
 				Aliases: []string{"a", "note"},
 				Usage:   "Add a note",
 				Action:  addNote,
+			},
+			{
+				Name:    "task",
+				Aliases: []string{"t"},
+				Usage:   "Add a task",
+				Action:  addTask,
 			},
 		},
 	}
