@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -197,6 +198,51 @@ func listTasks(c *cli.Context) error {
 	return nil
 }
 
+func completeTask(c *cli.Context) error {
+	taskNumber, err := strconv.Atoi(c.Args().First())
+	if err != nil {
+		return err
+	}
+
+	mark := "- "
+
+	path := getLogPath()
+	file, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+
+	tmpfile, err := ioutil.TempFile("", ".BULLETLOG.*")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	lineNumber := 0
+
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			break
+		}
+		if strings.HasPrefix(line, mark) {
+			if taskNumber == lineNumber {
+				task := strings.TrimLeft(line, mark)
+				line = fmt.Sprintf("x %s", task)
+			}
+			lineNumber += 1
+		}
+
+		fmt.Fprintf(tmpfile, line)
+	}
+	os.Rename(tmpfile.Name(), path)
+
+	return nil
+}
+
 func main() {
 	app := &cli.App{
 		Name:  "blt",
@@ -225,6 +271,12 @@ func main() {
 				Aliases: []string{"ts"},
 				Usage:   "List tasks",
 				Action:  listTasks,
+			},
+			{
+				Name:    "complete",
+				Aliases: []string{"comp"},
+				Usage:   "Complete task",
+				Action:  completeTask,
 			},
 		},
 	}
