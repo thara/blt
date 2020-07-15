@@ -168,6 +168,35 @@ func listNotes(c *cli.Context) error {
 	return nil
 }
 
+func listTasks(c *cli.Context) error {
+	mark := "- "
+
+	path := getLogPath()
+	file, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+
+	lineNumber := 0
+
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			break
+		}
+		if strings.HasPrefix(line, mark) {
+			task := strings.TrimLeft(line, mark)
+			fmt.Printf("%d: %s\n", lineNumber, strings.TrimSuffix(task, "\n"))
+			lineNumber += 1
+		}
+	}
+
+	return nil
+}
+
 func main() {
 	app := &cli.App{
 		Name:  "blt",
@@ -190,6 +219,12 @@ func main() {
 				Aliases: []string{"ls"},
 				Usage:   "List notes",
 				Action:  listNotes,
+			},
+			{
+				Name:    "tasks",
+				Aliases: []string{"ts"},
+				Usage:   "List tasks",
+				Action:  listTasks,
 			},
 		},
 	}
